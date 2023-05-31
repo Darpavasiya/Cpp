@@ -1,0 +1,92 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+typedef vector<vector<double>> Matrix;
+
+// Function to display a matrix
+void displayMatrix(const Matrix& matrix) {
+    for (const auto& row : matrix) {
+        for (const auto& element : row) {
+            cout << element << "\t";
+        }
+        cout << endl;
+    }
+}
+
+// Function to calculate the inverse of a matrix
+Matrix inverseMatrix(const Matrix& matrix) {
+    // Get the size of the matrix
+    int n = matrix.size();
+
+    // Create an augmented matrix [matrix | identity]
+    Matrix augmentedMatrix(n, vector<double>(2 * n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            augmentedMatrix[i][j] = matrix[i][j];
+        }
+        augmentedMatrix[i][i + n] = 1;
+    }
+
+    // Apply Gauss-Jordan elimination
+    for (int i = 0; i < n; i++) {
+        // Swap rows if the current row has a zero in the current column
+        if (augmentedMatrix[i][i] == 0) {
+            int j = i + 1;
+            while (j < n && augmentedMatrix[j][i] == 0) {
+                j++;
+            }
+            if (j == n) {
+                // The matrix is not invertible
+                cout << "Matrix is not invertible." << endl;
+                return Matrix();
+            }
+            swap(augmentedMatrix[i], augmentedMatrix[j]);
+        }
+
+        // Scale the current row to have a leading coefficient of 1
+        double scale = augmentedMatrix[i][i];
+        for (int j = 0; j < 2 * n; j++) {
+            augmentedMatrix[i][j] /= scale;
+        }
+
+        // Eliminate the other rows
+        for (int j = 0; j < n; j++) {
+            if (j != i) {
+                double factor = augmentedMatrix[j][i];
+                for (int k = 0; k < 2 * n; k++) {
+                    augmentedMatrix[j][k] -= factor * augmentedMatrix[i][k];
+                }
+            }
+        }
+    }
+
+    // Extract the inverse matrix from the augmented matrix
+    Matrix inverse(n, vector<double>(n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            inverse[i][j] = augmentedMatrix[i][j + n];
+        }
+    }
+
+    return inverse;
+}
+
+int main() {
+    Matrix matrix = {{1, 2, 3},
+                     {4, 5, 6},
+                     {7, 8, 9}};
+
+    cout << "Original Matrix:" << endl;
+    displayMatrix(matrix);
+
+    Matrix inverse = inverseMatrix(matrix);
+
+    if (!inverse.empty()) {
+        cout << "Inverse Matrix:" << endl;
+        displayMatrix(inverse);
+    }
+
+    return 0;
+}
